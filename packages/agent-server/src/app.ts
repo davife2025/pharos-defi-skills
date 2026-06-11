@@ -5,6 +5,10 @@ import rateLimit from "express-rate-limit";
 import { v4 as uuidv4 } from "uuid";
 import { dispatch, dispatchMany, SKILL_REGISTRY } from "@pharos-defi-skills/skills";
 import type { AgentSkillCall, SkillName } from "@pharos-defi-skills/skills";
+import { logger } from "@pharos-defi-skills/skills";
+import { apiKeyAuth } from "./middleware/auth";
+
+const log = logger.child("agent-server");
 
 export function createApp() {
   const app = express();
@@ -26,6 +30,9 @@ export function createApp() {
     },
   });
   app.use(limiter);
+
+  // API key auth — disabled if AGENT_SERVER_API_KEY is not set
+  app.use(apiKeyAuth);
 
   // Request ID injection
   app.use((req: Request, _res: Response, next: NextFunction) => {
@@ -187,7 +194,7 @@ export function createApp() {
 
   // ─── Global Error Handler ─────────────────────────────────────────────────────
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error("[agent-server] Unhandled error:", err);
+    log.error("Unhandled error", { message: err.message, stack: err.stack });
     res.status(500).json({
       success: false,
       error: {

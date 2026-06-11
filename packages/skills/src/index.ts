@@ -2,6 +2,7 @@
 export { portfolioSnapshot } from "./skills/portfolio-snapshot";
 export { tokenPriceFeed } from "./skills/token-price-feed";
 export { gasEstimator } from "./skills/gas-estimator";
+export { tokenSwap } from "./skills/token-swap";
 
 // ─── Agent Interface Layer ────────────────────────────────────────────────────
 export { dispatch, dispatchMany } from "./agent/dispatcher";
@@ -15,6 +16,20 @@ export type {
   SkillInputMap,
   SkillOutputMap,
 } from "./agent/types";
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+export { logger } from "./lib/logger";
+export type { LogLevel } from "./lib/logger";
+
+// ─── Cache / Supabase ─────────────────────────────────────────────────────────
+export { isSupabaseConfigured } from "./lib/supabase";
+export {
+  getCachedPortfolioSnapshot,
+  setCachedPortfolioSnapshot,
+  getCachedTokenPrice,
+  setCachedTokenPrice,
+  logSkillCall,
+} from "./lib/cache";
 
 // ─── Types: portfolio-snapshot ────────────────────────────────────────────────
 export type {
@@ -40,6 +55,12 @@ export type {
   TransactionRequest,
   AffordabilityCheck,
 } from "./skills/gas-estimator/types";
+
+// ─── Types: token-swap ────────────────────────────────────────────────────────
+export type {
+  TokenSwapInput,
+  TokenSwapOutput,
+} from "./skills/token-swap/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 export {

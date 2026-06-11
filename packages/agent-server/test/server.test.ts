@@ -17,11 +17,12 @@ describe("Agent Server — GET /skills", () => {
     const res = await request(app).get("/skills");
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.skills).toHaveLength(3);
+    expect(res.body.data.skills).toHaveLength(4);
     expect(res.body.data.skills.map((s: { name: string }) => s.name)).toEqual([
       "portfolio_snapshot",
       "token_price_feed",
       "gas_estimator",
+      "token_swap",
     ]);
   });
 
@@ -151,5 +152,85 @@ describe("Agent Server — 404", () => {
     const res = await request(app).get("/unknown-route");
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe("NOT_FOUND");
+  });
+});
+
+describe("Agent Server — Auth middleware", () => {
+  const ORIGINAL_KEY = process.env.AGENT_SERVER_API_KEY;
+
+  afterEach(() => {
+    // Restore env after each test
+    if (ORIGINAL_KEY === undefined) {
+      delete process.env.AGENT_SERVER_API_KEY;
+    } else {
+      process.env.AGENT_SERVER_API_KEY = ORIGINAL_KEY;
+    }
+  });
+
+  it("should allow all requests when AGENT_SERVER_API_KEY is not set", async () => {
+    delete process.env.AGENT_SERVER_API_KEY;
+    const appNoAuth = createApp();
+    const res = await request(appNoAuth)
+      .post("/skills/invoke")
+      .send({ skill: "portfolio_snapshot", params: { walletAddress: "bad" } });
+    expect(res.status).not.toBe(401);
+    expect(res.status).not.toBe(403);
+  });
+
+  it("should return 401 when API key is required but missing", async () => {
+    process.env.AGENT_SERVER_API_KEY = "test-secret-key";
+    const appWithAuth = createApp();
+    const res = await request(appWithAuth)
+      .post("/skills/invoke")
+      .send({ skill: "portfolio_snapshot", params: { walletAddress: "bad" } });
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("MISSING_API_KEY");
+  });
+
+  it("should return 403 when wrong API key is provided", async () => {
+    process.env.AGENT_SERVER_API_KEY = "test-secret-key";
+    const appWithAuth = createApp();
+    const res = await request(appWithAuth)
+      .post("/skills/invoke")
+      .set("x-api-key", "wrong-key")
+      .send({ skill: "portfolio_snapshot", params: { walletAddress: "bad" } });
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe("INVALID_API_KEY");
+  });
+
+  it("should accept correct API key via x-api-key header", async () => {
+    process.env.AGENT_SERVER_API_KEY = "test-secret-key";
+    const appWithAuth = createApp();
+    const res = await request(appWithAuth)
+      .post("/skills/invoke")
+      .set("x-api-key", "test-secret-key")
+      .send({ skill: "portfolio_snapshot", params: { walletAddress: "bad" } });
+    expect(res.status).not.toBe(401);
+    expect(res.status).not.toBe(403);
+  });
+
+  it("should accept correct API key via Authorization Bearer header", async () => {
+    process.env.AGENT_SERVER_API_KEY = "test-secret-key";
+    const appWithAuth = createApp();
+    const res = await request(appWithAuth)
+      .post("/skills/invoke")
+      .set("Authorization", "Bearer test-secret-key")
+      .send({ skill: "portfolio_snapshot", params: { walletAddress: "bad" } });
+    expect(res.status).not.toBe(401);
+    expect(res.status).not.toBe(403);
+  });
+
+  it("should always allow GET /health without auth", async () => {
+    process.env.AGENT_SERVER_API_KEY = "test-secret-key";
+    const appWithAuth = createApp();
+    const res = await request(appWithAuth).get("/health");
+    expect(res.status).toBe(200);
+  });
+
+  it("should always allow GET /skills without auth", async () => {
+    process.env.AGENT_SERVER_API_KEY = "test-secret-key";
+    const appWithAuth = createApp();
+    const res = await request(appWithAuth).get("/skills");
+    expect(res.status).toBe(200);
   });
 });

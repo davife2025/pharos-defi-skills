@@ -46,6 +46,23 @@ describe("dispatch()", () => {
     expect(response.skill).toBe("gas_estimator");
     expect(response.result.success).toBe(false);
   });
+
+  it("should route token_swap correctly", async () => {
+    const response = await dispatch({
+      skill: "token_swap",
+      params: {
+        privateKey: "",
+        tokenIn: "NATIVE",
+        tokenOut: "0x000000000000000000000000000000000000dEaD",
+        amountIn: "1.0",
+      },
+    });
+    expect(response.skill).toBe("token_swap");
+    expect(response.result.success).toBe(false);
+    if (!response.result.success) {
+      expect(response.result.error.code).toBe("INVALID_PRIVATE_KEY");
+    }
+  });
 });
 
 describe("dispatchMany()", () => {
@@ -72,8 +89,8 @@ describe("dispatchMany()", () => {
 });
 
 describe("SKILL_REGISTRY", () => {
-  it("should contain all 3 registered skills", () => {
-    expect(SKILL_REGISTRY.skills).toHaveLength(3);
+  it("should contain all 4 registered skills", () => {
+    expect(SKILL_REGISTRY.skills).toHaveLength(4);
   });
 
   it("should have valid chain config", () => {

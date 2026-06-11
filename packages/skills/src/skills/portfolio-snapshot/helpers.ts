@@ -1,6 +1,9 @@
 import { Contract, formatUnits, getAddress, JsonRpcProvider } from "ethers";
 import { ERC20_BALANCE_ABI } from "../../abi/erc20";
 import { TokenBalance } from "./types";
+import { logger } from "../../lib/logger";
+
+const log = logger.child("portfolio-snapshot");
 
 /**
  * Validates and checksums an Ethereum address.
@@ -63,9 +66,7 @@ export async function fetchTokenBalances(
   return results
     .map((result, i) => {
       if (result.status === "fulfilled") return result.value;
-      console.warn(
-        `[portfolio-snapshot] Failed to fetch token ${tokenAddresses[i]}: ${result.reason}`
-      );
+      log.warn("Failed to fetch token", { token: tokenAddresses[i], reason: result.reason });
       return null;
     })
     .filter((r): r is TokenBalance => r !== null);

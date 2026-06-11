@@ -15,6 +15,10 @@ import {
   GasEstimatorInput,
   GasEstimatorOutput,
 } from "../skills/gas-estimator/types";
+import {
+  TokenSwapInput,
+  TokenSwapOutput,
+} from "../skills/token-swap/types";
 import { SkillResult } from "../skills/portfolio-snapshot/types";
 
 export { SkillResult };
@@ -25,7 +29,8 @@ export { SkillResult };
 export type SkillName =
   | "portfolio_snapshot"
   | "token_price_feed"
-  | "gas_estimator";
+  | "gas_estimator"
+  | "token_swap";
 
 /**
  * Maps each skill name to its input type.
@@ -34,6 +39,7 @@ export type SkillInputMap = {
   portfolio_snapshot: PortfolioSnapshotInput;
   token_price_feed: TokenPriceFeedInput;
   gas_estimator: GasEstimatorInput;
+  token_swap: TokenSwapInput;
 };
 
 /**
@@ -43,22 +49,15 @@ export type SkillOutputMap = {
   portfolio_snapshot: PortfolioSnapshotOutput;
   token_price_feed: TokenPriceFeedOutput;
   gas_estimator: GasEstimatorOutput;
+  token_swap: TokenSwapOutput;
 };
 
 /**
  * The standard Agent skill call envelope.
- * Any Agent framework calls skills using this shape.
- *
- * @example
- * {
- *   skill: "portfolio_snapshot",
- *   params: { walletAddress: "0x...", network: "testnet" }
- * }
  */
 export interface AgentSkillCall<S extends SkillName = SkillName> {
   skill: S;
   params: SkillInputMap[S];
-  /** Optional request ID for tracing */
   requestId?: string;
 }
 
@@ -69,12 +68,11 @@ export interface AgentSkillResponse<S extends SkillName = SkillName> {
   skill: S;
   requestId?: string;
   result: SkillResult<SkillOutputMap[S]>;
-  /** Execution time in milliseconds */
   durationMs: number;
 }
 
 /**
- * Skill metadata — describes a skill to an Agent that's discovering capabilities.
+ * Skill metadata — describes a skill to an Agent discovering capabilities.
  */
 export interface SkillMeta {
   name: SkillName;

@@ -179,6 +179,71 @@ export const SKILL_REGISTRY: SkillRegistry = {
     PORTFOLIO_SNAPSHOT_META,
     TOKEN_PRICE_FEED_META,
     GAS_ESTIMATOR_META,
+    {
+      name: "token_swap",
+      version: "1.0.0",
+      description:
+        "Executes a token swap on a Uniswap V2 compatible DEX on Pharos. " +
+        "Handles NATIVE (PHRS) ↔ ERC-20 and ERC-20 ↔ ERC-20 swaps. " +
+        "Automatically handles token approval, slippage, and deadline. " +
+        "Always call gas_estimator before this skill to verify affordability.",
+      inputSchema: {
+        type: "object",
+        required: ["privateKey", "tokenIn", "tokenOut", "amountIn"],
+        properties: {
+          privateKey: {
+            type: "string",
+            description: "Wallet private key for signing. Never logged or stored.",
+          },
+          tokenIn: {
+            type: "string",
+            description: "Token to sell. Use 'NATIVE' for PHRS.",
+          },
+          tokenOut: {
+            type: "string",
+            description: "Token to buy. Use 'NATIVE' for PHRS.",
+          },
+          amountIn: {
+            type: "string",
+            description: "Human-readable amount to sell, e.g. '1.5'",
+          },
+          slippagePct: {
+            type: "number",
+            default: 0.5,
+            description: "Max slippage %. Default 0.5.",
+          },
+          routerAddress: {
+            type: "string",
+            description: "DEX router address. Defaults to PharosSwap.",
+          },
+          deadlineSeconds: {
+            type: "number",
+            default: 300,
+            description: "Tx deadline offset in seconds.",
+          },
+          network: {
+            type: "string",
+            enum: ["testnet", "mainnet"],
+            default: "testnet",
+          },
+        },
+      },
+      outputSchema: {
+        type: "object",
+        properties: {
+          txHash: { type: "string" },
+          tokenInSymbol: { type: "string" },
+          tokenOutSymbol: { type: "string" },
+          amountIn: { type: "string" },
+          amountOutMin: { type: "string" },
+          slippagePct: { type: "number" },
+          gasUsed: { type: "string" },
+          gasCostPHRS: { type: "string" },
+          blockNumber: { type: "number" },
+          explorerUrl: { type: "string" },
+        },
+      },
+    },
   ],
   chain: {
     testnet: { chainId: 688688, name: "Pharos Testnet" },

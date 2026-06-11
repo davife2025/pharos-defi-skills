@@ -1,6 +1,8 @@
 import { portfolioSnapshot } from "../skills/portfolio-snapshot";
 import { tokenPriceFeed } from "../skills/token-price-feed";
 import { gasEstimator } from "../skills/gas-estimator";
+import { tokenSwap } from "../skills/token-swap";
+import { logSkillCall } from "../lib/cache";
 import {
   AgentSkillCall,
   AgentSkillResponse,
@@ -59,6 +61,12 @@ export async function dispatch<S extends SkillName>(
         )) as SkillResult<SkillOutputMap[S]>;
         break;
 
+      case "token_swap":
+        result = (await tokenSwap(
+          call.params as Parameters<typeof tokenSwap>[0]
+        )) as SkillResult<SkillOutputMap[S]>;
+        break;
+
       default:
         result = {
           success: false,
@@ -80,12 +88,26 @@ export async function dispatch<S extends SkillName>(
     } as SkillResult<SkillOutputMap[S]>;
   }
 
-  return {
+  const response: AgentSkillResponse<S> = {
     skill: call.skill,
     requestId: call.requestId,
     result,
     durationMs: Date.now() - start,
   };
+
+  // Fire-and-forget analytics log
+  const network = (call.params as Record<string, unknown>)?.network as string | undefined;
+  logSkillCall({
+    skill: call.skill,
+    requestId: call.requestId,
+    network,
+    success: response.result.success,
+    durationMs: response.durationMs,
+    errorCode: !response.result.success ? response.result.error.code : undefined,
+    errorMsg: !response.result.success ? response.result.error.message : undefined,
+  }).catch(() => {});
+
+  return response;
 }
 
 /**
