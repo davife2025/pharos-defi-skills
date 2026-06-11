@@ -8,7 +8,9 @@
   "scripts": {
     "build": "yarn workspaces run build",
     "test": "yarn workspaces run test",
-    "lint": "yarn workspaces run lint"
+    "lint": "yarn workspaces run lint",
+    "start:server": "yarn workspace @pharos-defi-skills/agent-server start",
+    "dev:server": "yarn workspace @pharos-defi-skills/agent-server dev"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
